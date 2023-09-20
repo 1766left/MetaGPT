@@ -160,23 +160,26 @@ class OpenAIGPTAPI(BaseGPTAPI, RateLimiter):
         self.rpm = int(config.get("RPM", 10))
 
     async def _achat_completion_stream(self, messages: list[dict]) -> str:
-        response = await openai.ChatCompletion.acreate(**self._cons_kwargs(messages), stream=True)
+        # response = await openai.ChatCompletion.acreate(**self._cons_kwargs(messages), stream=True)
 
-        # create variables to collect the stream of chunks
-        collected_chunks = []
-        collected_messages = []
-        # iterate through the stream of events
-        async for chunk in response:
-            collected_chunks.append(chunk)  # save the event response
-            choices = chunk["choices"]
-            if len(choices) > 0:
-                chunk_message = chunk["choices"][0].get("delta", {})  # extract the message
-                collected_messages.append(chunk_message)  # save the message
-                if "content" in chunk_message:
-                    print(chunk_message["content"], end="")
-        print()
+        # # create variables to collect the stream of chunks
+        # collected_chunks = []
+        # collected_messages = []
+        # # iterate through the stream of events
+        # async for chunk in response:
+        #     collected_chunks.append(chunk)  # save the event response
+        #     choices = chunk["choices"]
+        #     if len(choices) > 0:
+        #         chunk_message = chunk["choices"][0].get("delta", {})  # extract the message
+        #         collected_messages.append(chunk_message)  # save the message
+        #         if "content" in chunk_message:
+        #             print(chunk_message["content"], end="")
+        # print()
+        # full_reply_content = "".join([m.get("content", "") for m in collected_messages])
 
-        full_reply_content = "".join([m.get("content", "") for m in collected_messages])
+        response = openai.ChatCompletion.create(**self._cons_kwargs(messages))
+        full_reply_content = self.get_choice_text(response)
+
         usage = self._calc_usage(messages, full_reply_content)
         self._update_costs(usage)
         return full_reply_content
